@@ -19,7 +19,7 @@
 
 ## Day 1 — 적재·품질 확인 (2026-09-19 ~ 09-20)
 - 목적: CSV 9개를 DuckDB에 등록하고 행 수·결측을 확인, 계획서(부록 B) 기준 수치를 내 SQL로 재현
-- 한 일: 01_load_check.ipynb (DuckDB VIEW 등록 → 행 수 → 타입 → 결측 → 도착일 결측 원인 → 리뷰 중복 제거 → 지연율·저평점 재현). 마지막에 Restart & Run All로 재현 확인(실행 번호 1~12 연속, 에러 없음), 노트북 끝에 con.close() 추가
+- 한 일: 01_load_check.ipynb (DuckDB VIEW 등록 → 행 수 → 타입 → 결측 → 도착일 결측 원인 → 리뷰 중복 제거 → 지연율·저평점 재현). 마지막에 Restart & Run All로 재현 확인(실행 번호 1~17 연속, 에러 없음), 노트북 끝에 con.close() 추가. 코드 리뷰 지적 사항을 검증하는 셀 5개 추가(멀티셀러 분석 모집단 기준, 분석기간 내 delivered·canceled, 리뷰 중복, 기타, 결정 문서의 나머지 사실)
 - 결과:
   - 행 수: orders 99,441 / order_items 112,650 / order_reviews 99,224 / order_payments 103,886 / customers 99,441 / sellers 3,095 / products 32,951 / geolocation 1,000,163 / cat_tr 71 (전부 일치)
   - 결측: orders(승인 시각 160건, 출고일 1,783건, 도착일 2,965건=3.0%), products(카테고리 등 610건=1.9%, 무게·크기 각 2건), order_reviews(제목 88.3%, 코멘트 58.7%). 그 외 테이블과 geolocation은 결측 없음
