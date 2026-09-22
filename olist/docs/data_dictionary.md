@@ -12,19 +12,29 @@
 | 2단계 전용 X 후보 | `price_sum`, `freight_sum`, `installments_max` |
 | 보조 (미매칭 대체용·추적용, 모델 입력은 계획 변경이 필요) | `customer_state`, `seller_state`, `category_pt`, `seller_by_price`, `n_items`, `n_sellers`, `order_approved_at` |
 | **분할 기준 (모델 입력 금지)** | `purchase_ts` |
-| **입력 금지** | `order_delivered_customer_date`, `order_estimated_delivery_date`, `order_status`, `review_id`, `review_score`, `review_comment_message` |
+| **입력 금지 — 사후 정보** | `order_delivered_customer_date`, `order_status`, `review_id`, `review_score`, `review_comment_message` |
+| **입력 금지 — 계획서 결정으로 제외** | `order_estimated_delivery_date` |
 | EDA 전용 파생 (주문 단위, Day 4 계산, 모델 입력 금지) | 배송오차(도착일 − 예상도착일), 예상소요일(예상도착일 − 구매일) |
 | Day 6 파생 X (마스터에는 없음) | `seller_avg_delay`(+결측 더미). 학습 구간의 `late`를 셀러 단위로 집계한 지연 비율(학습 행은 자기 제외, 교차검증은 fold별 재계산, D-01). 값은 지연 일수가 아니라 0~1 비율. 주문 단위 `late`·배송오차를 X로 넣는 것은 금지, 셀러 단위 과거 집계는 누수 차단 조건 아래에서만 허용 |
 
 ## 입력 금지 이유
 
+두 종류를 구분한다. **① 완전한 사후 정보**(주문 시점에는 알 수 없고, 배송·리뷰 결과가 반영된 값)와 **② 계획서 결정으로 제외한 값**(주문 시점에 이미 알 수 있는 값이지만, Y 정의에 쓰이거나 계획서가 X에서 빼기로 결정한 값)은 성격이 다르므로 같은 표에 섞지 않는다.
+
+### ① 완전한 사후 정보
+
 | 컬럼 | 이유 |
 |---|---|
 | `order_delivered_customer_date` | **사후 정보**(배송 결과). Y 정의에도 쓰임 |
-| `order_estimated_delivery_date` | **Y 정의에 쓰임(계획서 결정)**. 주문 시점에 알려진 값이라 엄밀한 사후 정보는 아니지만, 계획서가 X에서 제외하기로 결정함 |
 | `order_status` | 사후 정보(결과 상태가 반영됨) |
 | `review_id`, `review_score`, `review_comment_message` | 사후 정보. 2단계 Y 자체이거나 3단계 분석용 리뷰 내용 |
-| `purchase_ts` | **시간 분할 기준으로만 사용.** 시점 값을 X로 넣으면 테스트 구간 값이 학습 범위 밖이라 모델이 왜곡됨 |
+
+### ② 계획서 결정으로 제외
+
+| 컬럼 | 이유 |
+|---|---|
+| `order_estimated_delivery_date` | **Y(late) 정의에 쓰임.** 주문 시점에 이미 알려진 값이라 엄밀한 의미의 사후 정보는 아니지만(2단계 조기경보 관점에서는 오히려 쓸 수 있는 정보), Y 계산에 직접 쓰이는 값을 X로 같이 넣으면 안 된다는 이유로 계획서가 X에서 제외하기로 결정함. "포함하면 성능이 어떻게 달라지는가"는 한계/부록에서 별도로 비교할 수 있음(계획 변경 없이) |
+| `purchase_ts` | **시간 분할 기준으로만 사용.** 테스트 구간의 `purchase_ts` 값은 정의상 학습 구간의 값보다 항상 큼(미래 시점). 이 값 자체를 X로 넣으면 모델이 "테스트 구간에서 한 번도 본 적 없는 값 범위"를 외삽해야 하고, 애초에 시간 기준으로 학습/테스트를 나눈 취지(미래 정보를 모델이 직접 보지 않게 하는 것)와도 어긋남 |
 
 ## 컬럼 목록
 
@@ -35,9 +45,9 @@
 | `order_status` | 입력 금지 | 주문 상태 | |
 | `purchase_ts` | 분할 기준(입력 금지) | 구매 시각 | 시간 기준 분할(테스트 기간)에만 사용 |
 | `purchase_month` | 공통 X 후보 | 구매 월(1~12) | 연도가 빠져 계절성과 추세가 섞임. 정수/범주형/미사용은 Day 5~6에 결정(D-15) |
-| `order_approved_at` | 보조 | 승인 시각 | 2단계 예측 시점의 기준. 결측 가능 |
+| `order_approved_at` | 보조 | 승인 시각 | 2단계 예측 시점의 기준. **base(96,204건) 안에서 결측 14건** |
 | `order_delivered_customer_date` | 입력 금지 | 고객 도착일 | |
-| `order_estimated_delivery_date` | 입력 금지 | 예상도착일 | |
+| `order_estimated_delivery_date` | 입력 금지 | 예상도착일 | Y(late) 정의에 쓰임. 계획서 결정으로 X 제외(사후 정보라서가 아님) — 위 "입력 금지 이유 ②" 참고 |
 | `late` | Y(1단계) | 도착일(날짜) > 예상도착일(날짜)이면 1 | `base.late`를 그대로 사용. 6,532건(6.79%) |
 | `low` | Y(2단계) | `review_score` ≤ 2이면 1 | 리뷰 없으면 NULL(643건). 12,228건(리뷰 있는 95,561건의 12.8%) |
 | `customer_state` | 보조 | 고객 주 | 미매칭 대체(동일 주 평균) 후보 |
