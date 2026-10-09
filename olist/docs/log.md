@@ -121,3 +121,20 @@
   - customers/sellers INNER JOIN(다수 AI 지적): 안티조인으로 미매칭 0건 직접 재확인(기존엔 최종행수 일치로 간접 추론만 했음)
   - purchase_month 연도편중을 "새로 발견한 MAJOR"처럼 표현한 AI 2곳은 과장 — 이미 D-15로 추적 중이던 사안이라 별도 대응 불필요
 - 내일(Day 4): master.parquet을 pd.read_parquet로 읽어 EDA 시작. 먼저 orders 원본으로 분석기간 밖(2016년, 2018-09~10)까지 전체 월의 도착일 결측률을 확인(마지막 달 절단 편향 여부와 분석기간 경계의 근거)하고, D-03(테스트 기간)의 결정 규칙(월 범위·양성 수 기준)을 숫자로 먼저 기록한 뒤 월별 지연율·저평점률 추이 확인, Y 분포, 분석 기간 기준 상관계수 재확인(배송오차와 예상소요일·거리), 카테고리 미상 주문의 지연·저평점 비교, 가격 동점 주문(7,431건)의 원인 확인, distance_km의 유니크 값 수와 거리 동점(D-12)이 같은 우편번호 셀러에서 생기는지, 143건의 구성(동점 vs 전부 NULL)과 seller_state 동일 여부 확인
+
+## Day 4 — EDA·기준값 확정 (2026-09-23 ~ 09-29)
+- 목적: master.parquet으로 EDA를 진행하고, 파생변수 생성에 필요한 기준값(테스트 기간, min_n·카테고리 후보, 선택편향, 상관·VIF)을 확정
+- 한 일: 04_eda_day4_v32.ipynb (분석기간 경계 재확인 → D-03 결정규칙 사전 고정 → 월별 추이+Mann-Kendall → N 잠정결정+D-17 반영 재검증 → Y분포+선택편향 카이제곱 → T-test → 미상 카테고리 비교 → 상관·VIF → 가격/거리 동점 원인 → min_n·카테고리 후보표 → geolocation 미매칭 비중)
+- 결과: N=4(2018-05~08) 확정, Mann-Kendall 둘 다 추세없음(p=0.1119/0.6265), Cramér's V 0.055(has_review×late), 거리 동점 143건 확정(159건 후보 중 16건 제외), min_n·카테고리 후보표(재료) 산출
+- 해석: N=4/N=5가 표본 79% 중첩이라는 걸 뒤늦게 발견해 "N=4가 통계적으로 우월하다"는 초기 결론을 철회, 학습데이터량 트레이드오프로 근거를 좁힘 — 결과 먼저 보고 그럴듯한 설명을 붙이는 확증편향을 스스로 잡은 사례로 기록해둘 만함
+- 문제·시행착오(2026-09-29~30 재검토로 발견·수정): VIF 표본 축소(477건) 원인을 delivery_error_days로 잘못 서술 → 실제로는 distance_km 결측 때문(정정). "두 datetime 모두 시간정보 없음" 결론 오류 → order_delivered_customer_date는 41,099종의 실제 시각이 있고 order_estimated_delivery_date만 항상 자정이라, diff=0인 검증 방식 자체가 시간정보 유무를 구분 못 하는 방법이었음(정정, 날짜단위 비교 자체는 계속 유효). 파일명 참조(구버전 05 노트북명)·라벨 오기(143→159) 정정
+- 내일(Day 5): D-01(seller_avg_delay)·D-02(category_grouped)·D-04(geolocation 대체)·D-16(화이트리스트) 확정, purchase_month(D-15) 결정
+
+## Day 5 — 파생변수 확정 (2026-09-27 ~ 09-30)
+- 목적: seller_avg_delay·category_grouped·purchase_month·distance_km 대체를 확정하고, 모델 입력 화이트리스트(D-16)를 코드로 고정해 파생변수를 저장
+- 한 일: 05_seller_avg_delay_v14.ipynb(D-01·D-02·D-04·D-16; v13에 LOO·OOF 비교 부록 2-3 셀만 추가, 기존 셀 불변, 2026-10-08 전체 재실행으로 v13과 같은 결과 확인), 06_purchase_month_d15_v4.ipynb(D-15)
+- 결과: decisions.md D-01·D-02·D-03·D-04·D-15·D-16 참고. data/processed/master_features.parquet(96,204행×30컬럼) 저장(초기 저장본은 중간 산출물 delivery_error_days·seller_id가 포함된 32컬럼이었으나 최종 저장 전 둘 다 drop해 30컬럼으로 정리, D-16)
+- 해석(D-01 관련, 이번 Day에서 가장 비중이 컸던 부분): 최초 구현(delivery_error_days 평균)이 계획서 정의(지연 비율)와 다르다는 걸 발견해 복원했고, 그 과정에서 라벨 가용시점 누출(구매순서만으로 "아직 배송 전" 주문의 late를 쓰고 있었음, AUC 0.60→0.54로 하락)과 그보다 더 미묘한 2차 누출(min_n·정의 선택 자체가 테스트 구간 라벨을 참고하고 있었음, 학습기간만으로 재계산해 차단)을 순차적으로 발견해 수정함. fallback/non-fallback 분리 비교(AUC 0.62 vs 0.59)로 신호의 상당 부분이 셀러 품질이 아니라 시기 효과를 대리한다는 한계도 확인 방식 선택(LOO·OOF·시간순 expanding)은 구매 순서상 미래정보 사용 여부로 정했고 성능으로 고르지 않음(04 cell 54~55는 delivery_error_days 기준). 사후 부록(05 2-3)에서 late 기준으로 학습기간만 확인한 결과 LOO AUC 0.6153·OOF 0.6136·확정 방식 0.5947로 미래정보를 쓰면 약 0.02 높지만, LOO·OOF에는 min_n 규칙이 없어 누출만의 효과로 분리하지 못함(D-01 경과 4)
+- 문제·시행착오: 화이트리스트(D-16) 초안에 customer_state/seller_state/n_items/n_sellers 4개 컬럼이 STAGE1/STAGE2/EXCLUDE_COLS 어디에도 안 들어가 있던 걸 뒤늦게 발견 — 겹침 검사만으로는 "어디에도 없는 컬럼"을 못 잡는다는 걸 알게 돼 커버리지 assert(`set(master.columns) <= STAGE1|STAGE2|EXCLUDE`)를 추가. min_n=20 채택이 사후 판단(결과를 본 뒤의 절충)이라는 걸 인지하고 decisions.md에 사전 기준인 것처럼 쓰지 않도록 문구 조정. 계획서 필수 항목인 category_grouped×low 카이제곱 검정이 빠져 있던 걸 뒤늦게 추가(chi2=363.85, V=0.0617, Negligible). 노트북 반복 수정 과정에서 cell21(customer_state vs seller_state 비교 주석)이 실제 출력값(27개/42.0%, 22개/70.9%)과 다른 초기 추정치(27개/41.9%, 23개/70.9%)로 여러 버전(v6~v11)에 걸쳐 방치돼 있던 것도 뒤늦게 발견해 정정 — 코드 결과(print문)는 항상 맞았지만 고정 텍스트 주석이 안 따라간 사례
+- 미확인 항목(Day 6 전에 안 풀어도 되지만 기록해둠): 2018년 2~3월 late율 스파이크(14.1~19.0%)의 원인. D-15 판단(미사용)에는 영향 없음 — 06_purchase_month_d15_v4.ipynb cell0에서 이 항목을 이 log.md로 참조하고 있음. 또한 테스트 구간 주문 중 신규 셀러(학습 구간 이력 0건)의 비율은 계산하지 않았음(D-01 미확인, 구버전 계획에는 Day 5 확인 항목이었음)
+- 내일(Day 6): decisions.md·data_dictionary.md 반영 완료 후 baseline 모델(로지스틱+RF, 시간분할, PR-AUC) — 07_day6_baseline.ipynb
