@@ -185,7 +185,7 @@
 - [x] (선택) creation_date 날짜 단위 비교 확인: `(t3["review_creation_date"].dt.normalize() < t3["order_delivered_customer_date"].dt.normalize()).sum()` — 27이면 §1 문구를 "날짜 단위 비교 27 / 타임스탬프 비교 210, 정의 차이"로 수정, 다르면 현재 문구 유지 → 결과 27, §1 문구 수정함 (2026-10-13)
 - [x] Step 2 노트북에서 확인용 20번 셀 제거, 입력된 라벨이 있으면 중단하는 `assert`·`RULES_COMMITTED` 장치·manifest sha256 `assert` 추가 (2026-10-16 확인)
 - [x] Step 2 노트북 라벨 열을 `mentions_freight_cost` 하나로 정리(§3) (2026-10-16 확인)
-- [ ] 커밋 후 라벨링 시작 전에 Step 2 노트북을 재실행해 manifest sha256이 `c4469f54…a606fb`와 같은지 확인
+- [x] 커밋 후 라벨링 시작 전에 Step 2 노트북을 재실행해 manifest sha256이 `c4469f54…a606fb`와 같은지 확인 (2026-10-18 재실행: meta의 rules_commit_hash 2488274201c15676225ae9242c98aa6e129aecc6, manifest_sha256 일치, assert 모두 통과, 라벨 입력 전)
 - [ ] 계획서 3절 "40.6%"를 40.51%로 정정하고 행 수 흐름표를 3단계 분모(6,449주문 → 6,400리뷰 → 라벨링 표본)까지 확장
 - [ ] LeIA "기본 → 보조" 변경을 강사님께 계획 변경으로 보고
 - [x] 노트북 파일명을 `09_stage3_step1_target.ipynb`로 변경하고 첫 셀 제목도 같이 수정(`08_wrapup`과 번호 중복) (2026-10-16 확인)
