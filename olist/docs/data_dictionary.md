@@ -2,7 +2,7 @@
 
 주문 1건 = 1행. 파일: `data/processed/master.parquet` (DuckDB `master` 테이블). 모집단은 분석기간(2017-01 ~ 2018-08) 중 도착일이 있는 주문(base). 2단계 모집단은 `low`가 NULL이 아닌 95,561건.
 
-**[2026-09-30 추가] Day 5에서 파생변수 4개(`seller_avg_delay`, `seller_avg_delay_is_fallback`, `category_grouped`, `distance_km_filled`)를 추가해 `data/processed/master_features.parquet`(96,204행 × 30컬럼)로 별도 저장함. 이 문서의 "역할 구분" 표와 아래 컬럼 목록은 이 파생변수들까지 포함해 갱신됨 — Day 6부터는 master.parquet이 아니라 master_features.parquet을 읽을 것. (초기 저장본은 분석 중간 산출물인 `delivery_error_days`·`seller_id`가 함께 저장돼 32컬럼이었으나, 둘 다 최종 저장 전 drop하도록 05 노트북을 수정해 30컬럼으로 정리함, 05_seller_avg_delay_v14.ipynb — v13과 같은 결과임을 v14 전체 재실행으로 확인)**
+**[2026-09-30 추가] Day 5에서 파생변수 4개(`seller_avg_delay`, `seller_avg_delay_is_fallback`, `category_grouped`, `distance_km_filled`)를 추가해 `data/processed/master_features.parquet`(96,204행 × 30컬럼)로 별도 저장함. 이 문서의 "역할 구분" 표와 아래 컬럼 목록은 이 파생변수들까지 포함해 갱신됨 — Day 6부터는 master.parquet이 아니라 master_features.parquet을 읽을 것. (초기 저장본은 분석 중간 산출물인 `delivery_error_days`·`seller_id`가 함께 저장돼 32컬럼이었으나, 둘 다 최종 저장 전 drop하도록 05 노트북을 수정해 30컬럼으로 정리함, 05_seller_avg_delay.ipynb — 이전 버전과 같은 결과임을 전체 재실행으로 확인)**
 
 **모집단 한계(D-18)**: "도착일이 있는 주문"만 다루므로, 분석기간 내 도착일이 없는 주문 2,888건(99,092건의 2.9% — shipped·unavailable·canceled·processing·invoiced 등)은 구조적으로 제외됨. 배송 실패·취소처럼 가장 불만이 클 만한 사례가 모델 스코프 밖에 있다는 뜻이므로, 최종 보고서 한계 섹션에 반드시 명시할 것.
 
@@ -50,7 +50,7 @@
 | `customer_id` | 식별 | 주문마다 발급되는 고객 키 | `customer_unique_id`와 다름 |
 | `order_status` | 입력 금지 | 주문 상태 | base는 이 컬럼이 아니라 도착일 유무로 정의되어, `canceled`인데 도착일이 있는 예외 1건(2018-02-19 주문)이 base에 포함됨. late=1로 계산됨(D-00) |
 | `purchase_ts` | 분할 기준(입력 금지) | 구매 시각 | 시간 기준 분할(테스트 기간)에만 사용 |
-| `purchase_month` | 입력 금지(미사용) | 구매 월(1~12) | 연도가 빠져 계절성과 추세가 섞임. D-15로 미사용 확정(06 노트북: 달력월 풀링에서는 1~3월·11월이 튀지만 연도별로 나누면 2017은 11월, 2018은 2~3월로 시점이 달라 반복 계절성으로 보기 어려움). 계획서 X 목록에 있던 변수라 계획 변경에 해당 |
+| `purchase_month` | 입력 금지(미사용) | 구매 월(1~12) | 연도가 빠져 계절성과 추세가 섞임. D-15로 미사용 확정(06 노트북: 달력월 풀링에서는 1~3월·11월이 튀지만 연도별로 나누면 2017은 11월, 2018은 2~3월로 시점이 달라 반복 계절성으로 보기 어려움). 07 5절 ablation에서도 PR-AUC·ROC-AUC 변화가 ±0.01 이내. 계획서 X 목록에 있던 변수라 계획 변경에 해당 |
 | `order_approved_at` | 보조 | 승인 시각 | 2단계 예측 시점의 기준. **base(96,204건) 안에서 결측 14건** |
 | `order_delivered_customer_date` | 입력 금지 | 고객 도착일 | |
 | `order_estimated_delivery_date` | 입력 금지 | 예상도착일 | Y(late) 정의에 쓰임. 계획서 결정으로 X 제외(사후 정보라서가 아님) — 위 "입력 금지 이유 ②" 참고 |
@@ -72,7 +72,7 @@
 | `review_id` | 입력 금지 | 리뷰 ID | 3단계에서 리뷰 단위 중복 제거 키(D-00d). 리뷰 없으면 NULL |
 | `review_score` | 입력 금지 | 리뷰 점수(1~5) | 리뷰 없으면 NULL(643건) |
 | `review_comment_message` | 입력 금지 | 리뷰 코멘트 | 3단계 텍스트 분석용. 결측 많음 |
-| `seller_avg_delay` | 1·2단계 공통 X | 구매시각 이전에 배송완료된 같은 셀러 주문의 late 누적평균(0~1), min_n=20 미만이면 같은 기준 전역평균 대체 | master.parquet엔 없음(Day 5 파생, D-01). 전체기간 기준 mean 0.0466, fallback 32.4%. 한계: 신호의 상당 부분이 시기 효과를 대리(fallback AUC 0.62 > non-fallback AUC 0.59, 학습기간 기준). 다만 fallback 집단은 구조적으로 신규·초반 셀러에 몰려 있어 이 비교에는 신규 셀러 효과가 섞여 있을 수 있음(D-01 한계 2) |
+| `seller_avg_delay` | 1·2단계 공통 X | 구매시각 이전에 배송완료된 같은 셀러 주문의 late 누적평균(0~1), min_n=20 미만이면 같은 기준 전역평균 대체 | master.parquet엔 없음(Day 5 파생, D-01). 전체기간 기준 mean 0.0466, fallback 32.4%. 한계: 신호의 상당 부분이 시기 효과를 대리(fallback AUC 0.62 > non-fallback AUC 0.59, 학습기간 기준). 다만 fallback 집단은 구조적으로 신규·초반 셀러에 몰려 있어 이 비교에는 신규 셀러 효과가 섞여 있을 수 있음(D-01 한계 2). Day 6 진단(07): fallback 행 월 내 AUC 0.514(합산 0.624)로 시기 효과 확인, 시기를 걷어낸 non-fallback 월 내 AUC는 학습 0.561 / 테스트 0.545, 초반 값은 배송완료분만 쓰는 규칙으로 실제 누적보다 낮게 편향(최대 약 0.027). D-01 한계 3 |
 | `seller_avg_delay_is_fallback` | 1·2단계 공통 X(결측 더미) | 위 fallback 대체 적용 여부 | |
 | `category_grouped` | 1·2단계 공통 X | 상위 22개(개별) + 미상(별도) + 기타(49개 묶음) | master.parquet엔 없음(Day 5 파생, D-02). 고유값 24개. 90% 커버율 기준(21개 89.46%, 22개 90.25%)으로 22 채택 |
 | `distance_km_filled` | 1·2단계 공통 X | distance_km 결측 477건을 customer_state 학습기간 평균으로 대체한 값 | master.parquet엔 없음(Day 5 파생, D-04). dist_missing과 함께 사용. seller_state(SP 70.9% 쏠림) 대신 customer_state(SP 42.0%) 채택 |
@@ -83,3 +83,29 @@
 |---|---|
 | `payment_type` | 계획서 X 후보에 없어 집계하지 않음(installments_max만 채택, D-06). 의도적 제외이며 성능·품질 문제 아님 — 필요해지면 LEFT JOIN 한 줄로 추가 가능 |
 | `customer_unique_id` | 분석 단위가 주문(order)이라 주문마다 발급되는 `customer_id`를 씀. 고객 단위(재구매 등) 분석을 하게 되면 그때 별도로 끌어와야 함 |
+
+## 07·08 산출물 (Day 6)
+
+모델 입력 컬럼 정의는 위와 같고(master_features.parquet 96,204행 × 30컬럼을 07·08이 읽음), 아래는 07 7-10 셀과 08이 만드는 파일이다.
+
+### data/processed/07_outputs/ (07 7-10 셀이 생성, .gitignore 대상이라 07을 다시 돌려 재생성)
+
+| 파일 | 내용 |
+|---|---|
+| `preds_stage1.parquet` | 1단계 테스트 구간 예측. `order_id`, `y`(late), `prob_logit`, `prob_rf` (25,352행, 07의 `te1` 순서) |
+| `preds_stage2.parquet` | 2단계 테스트 구간 예측. 같은 컬럼, y는 low (25,242행, `te2` 순서) |
+| `meta.json` | 모델 4개별 선택 설정(`selected`), F1 임계값(`thr`), 테스트 `pr_auc`, `base_rate`, `n_test` |
+| `cv_results.csv` | 07 7-3·7-5의 `cv_results`(선택 설정 이름, 임계값, PR-AUC, 상위 10% lift 등) |
+
+### outputs/tables/ (08 5-1 셀이 생성, 테스트 결과를 본 뒤의 사후 지표 포함)
+
+| 파일 | 컬럼 |
+|---|---|
+| `results.csv` (단계×모델 4행) | `단계`, `모델`(logit/rf), `선택 설정`, `n_test`, `양성 기저율`, `PR-AUC`, `PR-AUC/기저율`, `F1 임계값`, `top5_/top10_` + `precision`·`lift`(= precision ÷ 기저율)·`captured`(전체 양성 중 경보에 잡힌 비율), `섞은라벨_평균비율`(학습 라벨 5회 섞은 뒤 테스트 PR-AUC/기저율 평균), `학습_in-sample_비율`, `더미_accuracy`(항상 음성 예측) |
+| `results_monthly.csv` | `단계`, `모델`, `월`, `n`, `양성`, `기저율`, `PR-AUC`, `PR-AUC/기저율`(월 안에서 계산, 양성 0이면 NaN) |
+| `perm_importance_last_fold.csv` | `단계`, `모델`, `변수`, `기준 PR-AUC/기저율`, `하락(PR-AUC/기저율)`, `표준편차`(학습 구간 마지막 검증 fold, 10회 반복, 보조·사후) |
+
+`results.csv`에는 07의 7-7 기준선(R0·R1)과 부트스트랩 구간, 7-9 민감도, 7-8 VIF가 들어 있지 않다. 기준선과 민감도는 decisions.md D-21, VIF는 log.md Day 6 참고.
+
+### outputs/figures/
+`08_monthly_ratio.png`(월별 PR-AUC/기저율, 점 옆 숫자 = 월 양성 건수), `08_pr_curves.png`, `08_perm_importance.png`

@@ -1,0 +1,6 @@
+[ok] manifest sha256 일치 (c4469f54…a606fb)
+manifest split 값: {'dev': 204, 'hold': 106}
+[ok] dev 204 / hold-out 106 (hold-out은 원문 로딩 전에 제외)
+[ok] 로드된 원문 204건 모두 dev, hold-out 교집합 0건
+번역 대상 199건 / 21038자 (이미 완료 5건)
+[ok] 번역 결과 204건, hold-out 교집합 0건, tool=google-cloud-translation-v2-basic, lib=3.28.0

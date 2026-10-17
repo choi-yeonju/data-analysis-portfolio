@@ -1,0 +1,12 @@
+[
+  {"label": "분석 모집단(base) 주문 수", "value": "96,204", "notebook": "03_master.ipynb"},
+  {"label": "지연율(%)", "value": "6.79", "notebook": "01_load_check.ipynb"},
+  {"label": "저평점률(%, 리뷰 있는 주문 기준)", "value": "12.8", "notebook": "01_load_check.ipynb"},
+  {"label": "3단계 대상(지연 아님 & 저평점)", "value": "8,247", "notebook": "03_master.ipynb"},
+  {"label": "리뷰 있는 주문 수", "value": "95,561", "notebook": "03_master.ipynb"},
+  {"label": "멀티셀러 주문(모집단 기준)", "value": "1,272", "notebook": "03_master.ipynb"},
+  {"label": "거리 없는 주문(dist_missing)", "value": "477", "notebook": "03_master.ipynb"},
+  {"label": "item_base 아이템 수", "value": "109,873", "notebook": "03_master.ipynb"},
+  {"label": "geo_clean 행 수", "value": "1,000,132", "notebook": "02_geo_distance.ipynb"},
+  {"label": "거리 중앙값(km)", "value": "431.7", "notebook": "02_geo_distance.ipynb"}
+]

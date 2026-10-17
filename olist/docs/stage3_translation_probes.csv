@@ -1,0 +1,15 @@
+﻿probe_id,group,pt_text,expected_meaning_ko
+1,부정어·악센트,O produto não chegou até hoje.,상품이 오늘까지 도착하지 않았다
+2,부정어·악센트,Nunca recebi o que comprei.,산 것을 한 번도 받지 못했다
+3,부정어·악센트,"Não recebi nada, só a caixa vazia.",아무것도 못 받았고 빈 상자만 왔다
+4,부정어·악센트,"Não é defeituoso, mas é diferente da foto.",불량은 아니지만 사진과 다르다
+5,frete 구분,O valor do frete foi maior que o do produto.,배송비가 상품값보다 컸다
+6,frete 구분,"Frete rápido, chegou antes do prazo.",배송이 빨랐고 기한 전에 도착했다
+7,frete 구분,Paguei o frete e o produto veio quebrado.,배송비를 냈는데 상품이 깨져 왔다
+8,frete 구분,O frete demorou muito para chegar.,배송이 오래 걸렸다
+9,환불·교환,Pedi reembolso e ninguém respondeu.,환불을 요청했는데 아무도 답하지 않았다
+10,환불·교환,Solicitei a troca e a loja não deu retorno.,교환을 요청했는데 가게가 회신하지 않았다
+11,환불·교환,Pedi o estorno e o valor ainda não caiu na minha conta.,환불(결제 취소)을 요청했는데 아직 입금되지 않았다
+12,구어체,"vcs mandaram o produto errado, pq ninguém avisou?",너희가 다른 상품을 보냈는데 왜 아무도 알려주지 않았나
+13,부정어·악센트,"Nao recebi o produto, ja entrei em contato 3 vezes.",상품을 못 받았고 이미 3번 연락했다
+14,구어체,"Td certo com a entrega, mas veio com defeito.",배송은 문제없었지만 불량으로 왔다
