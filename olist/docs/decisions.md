@@ -301,7 +301,7 @@
 ### D-27 H3 격하 (확정, Day 7 · 10-14에 정함, 이후 dev 점검으로 보강)
 - H3(배송비 언급과 freight_sum)를 탐색적 가설로 낮춤. 10-14 결정 이유: 3분위당 약 100건이고 언급 비율을 모르는 상태라 확증으로 쓸 수 없음. 10-16 dev 번역 점검에서 frete 언급이 4/204(2%)로 확인돼 판단불가 가능성이 더 커졌다(결정 뒤에 확인한 보강 근거이며 결정 이유는 아님)
 - 판정 불가여도 실패로 기록하지 않고 그대로 보고
-- 규칙 문서 커밋 해시: (커밋 후 기록)
+- 규칙 문서 커밋 해시: 2488274201c15676225ae9242c98aa6e129aecc6 (2026-10-18)
 
 ## 확정 대기·실행 대기
 - D-17 후속2(날짜 내적 일관성, [Day 6 후속 갱신] 07·08은 order_approved_at·order_delivered_carrier_date를 쓰지 않아 영향 없음 — 미결정 상태로 두고 이 컬럼들을 쓰기 전까지 보류): carrier_date < purchase(166건)·delivered_customer < carrier(23건)·delivered_customer < approved_at(61건) 처리 방침: 제외 / 원인규명(부분취소·재출고 등) / 표시 후 그대로 사용 중 결정. order_delivered_carrier_date·order_approved_at을 배송오차 파생변수나 2단계 예측 시점 기준으로 쓰기 전에 확정
