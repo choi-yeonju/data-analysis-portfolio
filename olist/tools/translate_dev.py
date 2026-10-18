@@ -1,14 +1,14 @@
 """3단계 dev 리뷰 번역 (Google Cloud Translation Basic v2, 포르투갈어 -> 한국어).
 
-규칙(stage3_step0_rules_v12 §2) 준수:
-- hold-out review_id는 원문을 메모리에 올리기 전에 제외한다 (CSV를 chunk로 읽으며 dev id만 남김).
+규칙(docs/stage3_step0_rules.md §2) 준수:
+- 원본 CSV를 chunk로 읽으며 dev id만 남긴다. hold-out 행은 chunk 안에 잠시 올라오지만 출력·저장·열람·번역하지 않는다.
 - hold-out 격리 assert 출력을 docs/stage3_translate_isolation_log.txt 로 저장 (결과 문서 첨부용).
 - 번역 결과는 별도 캐시 파일에만 쓴다. 라벨링 작업 파일은 건드리지 않는다.
 
 실행 (프로젝트 루트에서):
-    python translate_dev.py --dry-run          # API 호출 없이 건수·글자 수만 확인
-    python translate_dev.py --limit 5          # 5건만 시험 번역
-    python translate_dev.py                    # dev 전체 (이미 번역된 건은 건너뜀)
+    python tools/translate_dev.py --dry-run          # API 호출 없이 건수·글자 수만 확인
+    python tools/translate_dev.py --limit 5          # 5건만 시험 번역
+    python tools/translate_dev.py              # dev 전체 (이미 번역된 건은 건너뜀)
 """
 import argparse
 import hashlib
@@ -39,7 +39,7 @@ def sha256(path: Path) -> str:
 
 
 def load_dev_texts(dev_ids: set, hold_ids: set) -> pd.DataFrame:
-    """원문을 chunk로 읽으며 dev id만 남긴다. hold-out 원문은 DataFrame에 올라오지 않는다."""
+    """원문을 chunk로 읽으며 dev id만 남긴다. hold-out 행은 chunk 안에 잠시 올라오지만 결과 DataFrame에는 남지 않는다."""
     parts = []
     for chunk in pd.read_csv(
         RAW_REVIEWS,
@@ -88,7 +88,7 @@ def main():
         f"건수 불일치 dev={len(dev)} hold-out={len(hold)}")
     dev_ids, hold_ids = set(dev["review_id"]), set(hold["review_id"])
     assert not (dev_ids & hold_ids)
-    log(f"[ok] dev {len(dev_ids)} / hold-out {len(hold_ids)} (hold-out은 원문 로딩 전에 제외)")
+    log(f"[ok] dev {len(dev_ids)} / hold-out {len(hold_ids)} (hold-out 원문은 출력·저장·번역하지 않고 dev만 남김)")
 
     # 2) dev 원문만 로드
     texts = load_dev_texts(dev_ids, hold_ids)
@@ -107,11 +107,11 @@ def main():
     n_chars = int(todo["text_pt"].str.len().sum())
     log(f"번역 대상 {len(todo)}건 / {n_chars}자 (이미 완료 {len(done)}건)")
 
+    if args.dry_run or todo.empty:
+        return                      # 로그 파일은 번역을 실제로 할 때만 새로 쓴다(재실행이 기존 증빙을 덮어쓰지 않게)
+
     LOG.parent.mkdir(parents=True, exist_ok=True)
     LOG.write_text("\n".join(log_lines) + "\n", encoding="utf-8")
-
-    if args.dry_run or todo.empty:
-        return
 
     # 4) 번역 (ADC 인증: gcloud auth application-default login)
     from google.cloud import translate_v2 as translate

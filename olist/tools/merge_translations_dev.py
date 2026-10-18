@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-CACHE = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/interim/translations_dev.csv")
+CACHE = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/interim/stage3/translations_dev.csv")
 LABEL = Path("data/processed/stage3/stage3_label_dev.csv")
 BACKUP = LABEL.with_name("stage3_label_dev.before_merge.csv")
 PROTECT = ["label_main", "label_sub", "mentions_freight_cost", "codebook_ver", "memo"]

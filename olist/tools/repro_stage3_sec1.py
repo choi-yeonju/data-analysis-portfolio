@@ -56,7 +56,12 @@ for name,src in [("원본 리뷰표(dedup 전)","rv_raw"),("dedup 후","rv")]:
     b=q("select count(*) from pcls where has_out_of_base=0 and has_late1=1")[0][0]
     c=q("select count(*) from pcls where has_out_of_base=0 and has_late1=0")[0][0]
     print(f"[{name}] 2개 이상 주문에 붙은 review_id={n93}  | 모집단 밖 짝 {a} / late=1 짝(모집단 안) {b} / 전부 대상 안 {c}")
-    if name=="dedup 후": assert (n93,a,b,c)==(93,27,18,48), (n93,a,b,c)
+    if name=="dedup 후":
+        assert (n93,a,b,c)==(93,27,18,48), (n93,a,b,c)
+        n_out=q("select count(*) from rv where review_id in (select review_id from pairs where n_orders>=2) and order_id not in (select order_id from base)")[0][0]
+        assert n_out==30, n_out
+        assert q("select count(*) from pcls where has_out_of_base=1 and has_late1=1")[0][0]==0
+        print("   (dedup 후 밖 짝 주문 수)", n_out, "/ 밖 짝·late=1 짝 동시 보유 0건")
     a2=q("select count(*) from pcls where has_late1=1")[0][0]
     print(f"   (late=1 짝 전체, 밖 짝과 겹침 허용) {a2}")
 

@@ -303,5 +303,10 @@
 - 판정 불가여도 실패로 기록하지 않고 그대로 보고
 - 규칙 문서 커밋 해시: 2488274201c15676225ae9242c98aa6e129aecc6 (2026-10-18)
 
+### D-28 증거 커밋 이후 정정·정리 (2026-10-18, 라벨링 시작 전. 증거 커밋 2488274 이후의 변경)
+- 정정: `tools/translate_dev.py` 주석과 격리 로그(`docs/stage3_translate_isolation_log.txt`)의 "hold-out은 원문 로딩 전에 제외"는 실제 동작보다 강한 표현이다. 프로그램이 원본 리뷰 CSV를 chunk로 읽는 동안 hold-out 행도 chunk 안에 메모리로 잠시 올라왔고 `isin(dev_ids)`로 dev만 남겼다. hold-out 원문은 출력·저장·열람하지 않았고 번역 대상에도 들어가지 않았다(교집합 0건 assert). D-24의 "텍스트 처리를 하지 않는다"도 이 범위로 읽는다. 커밋된 로그와 D-24 본문은 고치지 않고 이 항목으로 정정한다.
+- 정리(정의·결과 불변): 병합 스크립트 기본 경로, `translate_dev.py` 안내문·로그 덮어쓰기 순서, repro 스크립트의 추가 assert(밖 짝 30주문, 비겹침 0건), README 8번 보강. repro 스크립트는 수정 뒤 PC에서 다시 실행해 결과를 log에 기록한다.
+- manifest 파일 자체를 커밋할지는 정하지 않았다(정하면 이 항목에 추가).
+
 ## 확정 대기·실행 대기
 - D-17 후속2(날짜 내적 일관성, [Day 6 후속 갱신] 07·08은 order_approved_at·order_delivered_carrier_date를 쓰지 않아 영향 없음 — 미결정 상태로 두고 이 컬럼들을 쓰기 전까지 보류): carrier_date < purchase(166건)·delivered_customer < carrier(23건)·delivered_customer < approved_at(61건) 처리 방침: 제외 / 원인규명(부분취소·재출고 등) / 표시 후 그대로 사용 중 결정. order_delivered_carrier_date·order_approved_at을 배송오차 파생변수나 2단계 예측 시점 기준으로 쓰기 전에 확정

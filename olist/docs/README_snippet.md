@@ -14,4 +14,6 @@
 8. 3단계(리뷰 텍스트 분류, `docs/stage3_step0_rules.md` 참고):
    - `09_stage3_step1_target.ipynb` → `10_stage3_step2_sample.ipynb` 순서로 실행한다. 10은 규칙 문서를 커밋한 뒤 `RULES_COMMITTED=True`와 커밋 해시를 넣고 한 번만 실행한다(라벨링 시작 후에는 다시 실행하지 않는다).
    - 번역(dev만): `pip install google-cloud-translate` 후 Google Cloud 인증(ADC)을 설정하고 `python tools/translate_dev.py`를 실행한다. 결과는 `data/interim/stage3/translations_dev.csv`, 격리 로그는 `docs/stage3_translate_isolation_log.txt`에 저장된다. 인증 파일·원문·번역문은 repo에 올리지 않는다(`.gitignore`).
+   - 번역 병합(dev): `python tools/merge_translations_dev.py`로 `text_ko` 열에 합친다. 원문(`text_pt`) 일치와 review_id 집합을 검사하고, 라벨·메모가 입력된 뒤에는 중단한다.
+   - 샘플 manifest의 sha256은 Windows에서 만든 파일 기준이다. pandas가 실행 환경의 줄바꿈으로 저장하므로 다른 OS에서 다시 만들면 값이 다를 수 있다.
    - hold-out은 규칙 동결 커밋 전까지 번역·열람하지 않는다.
