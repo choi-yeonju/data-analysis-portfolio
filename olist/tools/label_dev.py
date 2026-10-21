@@ -10,7 +10,8 @@
   p1 f                 → 주 P1, 배송비 False
   p6a p3 t 배송비 비쌈  → 주 P6a, 부 P3, 배송비 True, 메모
   p6a+p3 u             → '+'로 붙여 써도 됨
-  코드: P1 P2 P3 P4 P5 P6a P6b P9 (대소문자·p 생략 가능: 1, 6a)
+  코드: P1 P2 P3 P4 P5 P6a P6b P9a P9b (대소문자·p 생략 가능: 1, 6a, 9a)
+        P9는 p9a(판독 불가) / p9b(체계 밖)로만 입력하고 부 유형으로는 쓰지 않는다(코드북 v1 규칙 8·9)
   배송비태그: t / f / u  (True / False / U, 반드시 입력)
 명령:  o 원문(포르투갈어) 보기 | b 이전 건 | g N N번(label_order)으로 이동 | k 건너뛰기
        p 일시정지(시간 제외) | q 저장 후 종료 | ? 도움말
@@ -56,7 +57,7 @@ BACKUP_DIR = DIR / "backup"
 KEEP_BACKUPS = 20
 
 LABEL_COLS = ["label_main", "label_sub", "mentions_freight_cost", "codebook_ver", "memo"]
-CODES = ["P1", "P2", "P3", "P4", "P5", "P6a", "P6b", "P9"]
+CODES = ["P1", "P2", "P3", "P4", "P5", "P6a", "P6b", "P9a", "P9b"]   # 코드북 v1: P9는 P9a(판독 불가)/P9b(체계 밖)
 CODE_KEY = {c[1:].lower(): c for c in CODES}          # '1'->P1, '6a'->P6a
 FREIGHT = {"t": "True", "true": "True", "f": "False", "false": "False", "u": "U"}
 HOURS_BUDGET_MIN = 720                                 # §4: H = 12시간
@@ -108,6 +109,8 @@ def parse(line):
     head = toks[0].split("+")
     if len(head) > 2:
         return None, "'+'는 한 번만 (주+부)"
+    if any(h.strip().lower() in ("9", "p9") for h in head):
+        return None, "P9는 p9a(판독 불가) 또는 p9b(체계 밖)로 입력"
     main = norm_code(head[0])
     if main is None:
         return None, f"주 유형 코드 오류 '{head[0]}' (가능: {', '.join(CODES)})"
@@ -123,6 +126,8 @@ def parse(line):
             sub, i = c, i + 1
     if sub == main:
         return None, "주 유형과 부 유형이 같음"
+    if sub.startswith("P9"):
+        return None, "P9 계열은 부 유형으로 쓰지 않음(코드북 v1 규칙 9). 다른 불만이 있으면 그쪽을 주 유형으로"
     if i >= len(toks):
         return None, "배송비 태그(t/f/u)가 필요함"
     fr = FREIGHT.get(toks[i].lower())
