@@ -32,6 +32,9 @@ from pathlib import Path
 
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hold_guard  # noqa: E402
+
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
@@ -234,6 +237,8 @@ def main():
     ap.add_argument("--ver", help="코드북 버전 (예: v0, v1). 라벨링할 때 필수")
     ap.add_argument("--range", nargs=2, type=int, default=[1, 100000], metavar=("LO", "HI"), help="label_order 범위(기본 전체)")
     ap.add_argument("--redo", action="store_true", help="이미 라벨 있는 건부터 다시 시작")
+    ap.add_argument("--freeze-commit", help="규칙 동결 커밋 해시(라벨링할 때 필수)")
+    ap.add_argument("--rules-sha", help="kw_rules.py file_sha256 12자(라벨링할 때 필수)")
     ap.add_argument("--summary", action="store_true")
     ap.add_argument("--export", action="store_true")
     ap.add_argument("--with-memo", action="store_true", help="--export에 메모 열 포함(기본은 제외)")
@@ -246,6 +251,9 @@ def main():
     if not a.ver:
         die("--ver 가 필요함 (예: --ver v0). 코드북 버전을 모르는 채로 라벨을 달지 않기 위해서")
 
+    if not (a.freeze_commit and a.rules_sha):
+        die("--freeze-commit 과 --rules-sha 가 필요함(동결 확인)")
+    hold_guard.assert_frozen(a.freeze_commit, a.rules_sha)
     lab, orig_cols = load_label()
     backup_all()
     lo, hi = a.range
