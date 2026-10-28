@@ -1,0 +1,7 @@
+[ok] 동결 확인: 커밋 252854b4ef (2026-10-27T15:40:53+09:00), kw_rules.py sha256 7e3c0952f98c
+[ok] manifest sha256 일치 (c4469f54…a606fb)
+manifest split 값: {'dev': 204, 'hold': 106}
+[ok] dev 204 / hold-out 106 (이 스크립트는 hold-out만 번역, dev는 결과에 남기지 않음)
+[ok] 로드된 원문 106건 모두 hold-out, dev 교집합 0건
+번역 대상 106건 / 11181자 (이미 완료 0건)
+[ok] 번역 결과 106건, dev 교집합 0건, tool=google-cloud-translation-v2-basic, lib=3.28.0
