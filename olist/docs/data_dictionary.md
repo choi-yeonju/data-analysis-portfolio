@@ -109,3 +109,22 @@
 
 ### outputs/figures/
 `08_monthly_ratio.png`(월별 PR-AUC/기저율, 점 옆 숫자 = 월 양성 건수), `08_pr_curves.png`, `08_perm_importance.png`
+
+## 3단계 산출물 (2026-10-29 추가)
+
+`data/processed/`와 `data/interim/`는 README 기준 `.gitignore` 대상이고 원문·번역문이 든 파일은 올리지 않는다. `outputs/`, `tools/`, `docs/`는 git에 올린다. 아래는 코드와 커밋 기록으로 확인된 것만 적었고, 확인 못 한 열은 "확인 안 함"으로 둔다.
+
+| 위치 | 파일 | 내용 |
+|---|---|---|
+| `data/processed/stage3/` | `stage3_sample_manifest.csv` | 층화 표본 310행 7열(`review_id, split, in_150, rank_in_stratum, label_order, stratum, weight_all`), sha256 `c4469f54…a606fb` |
+| 〃 | `stage3_mapping.csv` | 표본 메타. 14열: `review_id, split, label_order, stratum, N_h, n_h, weight_all, weight_150, in_150, rank_in_stratum, answered_before_delivery, late_ts, is_aug_2018, is_jul_aug_2018`. 층 = 분기 × 점수(1·2점) 14개 |
+| 〃 | `stage3_cross_vars_6400__open_after_labeling.csv` | 대상 6,400건의 교차 변수. 집계가 쓰는 열: `freight_sum, price_sum, n_items, n_sellers, freight_tercile, n_items_grp, n_sellers_grp`(그 외 열은 확인 안 함). **라벨링이 끝난 뒤에만 연다** |
+| `data/processed/stage3/` | `stage3_label_times.csv`, `stage3_label_times_hold.csv` | 건별 라벨링 소요 시간(열 `saved_at, pass, ver, label_order, review_id, seconds, viewed_pt`, 원문·번역 없음). `viewed_pt` = 원문 보기 명령(`o`) 사용 여부 |
+| `data/interim/stage3/` | `translations_dev.csv`, `translations_hold.csv` | 번역 캐시(원문·번역, 올리지 않음) |
+| `outputs/labels/` | `stage3_labels_dev.csv` | dev 라벨(첫 라벨 204 + 재라벨 100 = 304행, D-32 기록 기준, 공식 라벨 선택은 D-34). 마지막 수정 10-26 13:05(파일 시각, 재라벨 내보내기 커밋 `3fbaecb`) 이후 변경 없음 |
+| 〃 | `stage3_labels_hold.csv` | hold-out 106행(첫 라벨이 공식, review_id 106개, 결측 0, `codebook_ver`는 v1 하나, 원문 없음) |
+| `outputs/tables/` | `stage3_holdout_rule_eval.csv`, `stage3_holdout_rule_confusion.csv` | hold-out 규칙 평가(`eval_hold.py`, 1회, 커밋 `875912e`) |
+| 〃 | `stage3_results_shares.csv`, `_h3.csv`, `_cross.csv`, `_sensitivity.csv`, `_p6b_split.csv`, `_rule_weighted.csv` | **공식 집계**(`stage3_results.py`) |
+| 〃 | `stage3_final_shares.csv`, `_h3.csv`, `_cross.csv`, `_sensitivity_aug.csv`, `_p6b_split.csv` | 교차검증용 두 번째 구현(`report_stage3.py`). 비가중 건수 교차표와 H1 보조 지표는 여기에만 있다. 민감도는 공식 집계 값을 쓴다(D-34) |
+
+공식 라벨 열(`label_hold.py --export` 코드 기준): `review_id, label_order, pass, label_main, label_sub, mentions_freight_cost, codebook_ver`. dev 파일의 열은 같은 형식으로 보이나 열 이름은 확인 안 함. 분석에서는 P9a·P9b를 P9로 합친다.
