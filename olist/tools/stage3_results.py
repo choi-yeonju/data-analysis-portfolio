@@ -205,11 +205,9 @@ def main():
     ct = [cross("freight_tercile", "주: freight_sum 3분위")]
     ct.append(cross("n_items_grp", "부: n_items"))
     ct.append(cross("n_sellers_grp", "부: n_sellers"))
-    qcols = [c for c in list(mp.columns) + list(cr.columns) if "quarter" in c.lower()]
-    if qcols:
-        ct.append(cross(qcols[0], f"주: 분기({qcols[0]})"))
-    else:
-        print("\n분기 열이 mapping·cross_vars에 없음 → 분기 교차는 구매일(purchase_ts)을 붙인 뒤 따로 계산 필요")
+    # 층 이름 앞부분(예: 2017Q1_1 -> 2017Q1)을 분기로 사용. 층 정의(규칙 문서 §2)로 확인할 것
+    df["quarter"] = df["stratum"].astype(str).str.split("_").str[0]
+    ct.append(cross("quarter", "주: 분기(층 이름 앞부분)"))
     pd.concat(ct).to_csv(OUT_DIR / "stage3_results_cross.csv", index=False, encoding="utf-8-sig")
     print("(위 4개 이외의 교차는 '사후 탐색'이며 다중비교 보정을 하지 않았다)")
 
@@ -228,6 +226,7 @@ def main():
 
     # ---------- 6) P6b 도착 전/후
     p6b = df[df["type"] == "P6b"].copy()
+    print("\nanswered_before_delivery 원값(P6b):", p6b["answered_before_delivery"].value_counts().to_dict())
     p6b["before"] = tob(p6b["answered_before_delivery"])
     n_b, n_a = int(p6b.before.sum()), int((~p6b.before).sum())
     w_b, w_a = float(p6b.loc[p6b.before, "weight_all"].sum() / df.weight_all.sum()), float(p6b.loc[~p6b.before, "weight_all"].sum() / df.weight_all.sum())
