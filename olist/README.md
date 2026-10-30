@@ -57,7 +57,17 @@ olist/
 ```
 
 - 상세 보고서: [`docs/final_report.md`](docs/final_report.md)
-- 재현 순서: `pip install -r requirements.txt` → Kaggle에서 원본 CSV 9개를 `data/raw/`에 저장 → 노트북 01 → 08 순서로 실행 → 3단계는 `docs/README_snippet.md`의 명령 순서 → 노트북 11. 09·10은 표본 추출 기록이라 다시 실행하지 않는다
+### 다른 PC에서 실행하기
+
+1. 저장소를 받고 `olist` 폴더로 이동한다: `git clone https://github.com/choi-yeonju/data-analysis-portfolio.git` → `cd data-analysis-portfolio/olist`
+2. Python 3.13 가상환경을 만들고 패키지를 설치한다: `python -m venv .venv` → 활성화 → `pip install -r requirements.txt` (Windows·macOS·Linux 모두 설치 확인)
+3. 원본 데이터: [Kaggle 데이터셋](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)에서 CSV 9개를 받아 `data/raw/` **바로 아래에** 둔다(하위 폴더 없이). `kagglehub.dataset_download("olistbr/brazilian-ecommerce")`로 받아도 된다. `data/interim/`, `data/processed/` 폴더는 저장소에 빈 폴더로 들어 있다.
+4. **노트북의 작업 폴더가 `olist`여야 한다.** VS Code에서 `olist` 폴더를 열면 설정(`.vscode/settings.json`)으로 자동 적용된다. Jupyter Lab·Notebook은 노트북이 있는 `notebooks/`를 작업 폴더로 쓰므로, 각 노트북 맨 위에서 `%cd ..`를 한 번 실행한 뒤 진행한다.
+5. 노트북 01 → 08을 순서대로 각각 실행한다(전체 약 15\~20분, 07이 가장 오래 걸림). DuckDB를 쓰는 01\~03은 다음 노트북으로 넘어가기 전에 커널을 종료한다.
+6. 3단계 결과는 노트북 11로 확인한다. 11은 저장소에 커밋된 결과 표와 라벨만 읽으므로 원본 데이터 없이도 돌아간다.
+
+**재현 범위:** 1·2단계(01\~08)는 원본 CSV만 있으면 처음부터 다시 만들어진다(2026-10-30 새 환경에서 결과 표가 소수 14자리까지 같게 재현됨을 확인). 3단계는 리뷰 원문·번역문, 표본 파일(`data/processed/stage3/`), 번역 API 인증이 필요해 다른 PC에서 다시 돌릴 수 없고, 커밋된 라벨(`outputs/labels/`)과 결과 표, 노트북 11로 확인한다. 09·10은 표본 추출 기록이라 다시 실행하지 않는다. 3단계 도구의 실행 순서는 `docs/README_snippet.md`에 있다.
+
 - 원본 데이터와 리뷰 원문·번역문이 든 파일은 저장소에 올리지 않았다.
 
 ## 참고자료

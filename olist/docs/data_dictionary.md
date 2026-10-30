@@ -125,6 +125,6 @@
 | 〃 | `stage3_labels_hold.csv` | hold-out 106행(첫 라벨이 공식, review_id 106개, 결측 0, `codebook_ver`는 v1 하나, 원문 없음) |
 | `outputs/tables/` | `stage3_holdout_rule_eval.csv`, `stage3_holdout_rule_confusion.csv` | hold-out 규칙 평가(`eval_hold.py`, 1회, 커밋 `875912e`) |
 | 〃 | `stage3_results_shares.csv`, `_h3.csv`, `_cross.csv`, `_sensitivity.csv`, `_p6b_split.csv`, `_rule_weighted.csv` | **공식 집계**(`stage3_results.py`). `_sensitivity.csv`는 2026-10-30 규칙 문서 §8 방식으로 재계산(D-35) |
-| 〃 | `stage3_final_shares.csv`, `_h3.csv`, `_cross.csv`, `_sensitivity_aug.csv`, `_p6b_split.csv` | 교차검증용 두 번째 구현(`report_stage3.py`). 비가중 건수 교차표와 H1 보조 지표는 여기에만 있다. 민감도는 공식 집계 값을 쓴다(D-34) |
+| 〃 | `stage3_final_shares.csv`, `_h3.csv`, `_cross.csv`, `_sensitivity_aug.csv`, `_p6b_split.csv` | 교차검증용 두 번째 구현(`report_stage3.py`). 비가중 건수 교차표와 H1 보조 지표는 여기에만 있다. 민감도는 공식 집계 값을 쓴다(D-34, 10-30 §8 정식 재계산은 D-35) |
 
 공식 라벨 열(`label_hold.py --export` 코드 기준): `review_id, label_order, pass, label_main, label_sub, mentions_freight_cost, codebook_ver`. dev 파일의 열은 같은 형식으로 보이나 열 이름은 확인 안 함. 분석에서는 P9a·P9b를 P9로 합친다.

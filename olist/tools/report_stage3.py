@@ -1,4 +1,8 @@
-"""3단계 최종 집계 (규칙 문서 §6~§8). hold-out 라벨링과 규칙 평가가 모두 끝난 뒤에 실행한다. 실행은 olist 폴더, .venv 에서.
+"""[교차검증용 두 번째 구현] 공식 집계는 tools/stage3_results.py다(decisions D-34).
+이 스크립트에서 인용하는 것은 H1 보조 지표(재표본 중 P1 최다 비율, 차이 구간)와 비가중 교차 건수표뿐이다.
+§8 8월 제외 민감도 출력(stage3_final_sensitivity_aug.csv)은 근사이며, 공식 값은 D-35의 정식 재계산(stage3_results.py)이다. 인용하지 않는다.
+
+3단계 최종 집계 (규칙 문서 §6~§8). hold-out 라벨링과 규칙 평가가 모두 끝난 뒤에 실행한다. 실행은 olist 폴더, .venv 에서.
 
   python tools\\report_stage3.py                 # 화면 출력 + outputs/tables/stage3_final_*.csv 저장
   python tools\\report_stage3.py --seed 20261029 --n-boot 2000
