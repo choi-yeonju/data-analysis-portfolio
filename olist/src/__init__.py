@@ -9,12 +9,11 @@ from pathlib import Path
 # ------------------------------------------------
 # 무작위성이 개입하는 모든 기능(PCA, 군집, 데이터 분할 등)의 재현성을 위한 랜덤시드 
 # 하위 모듈에서 'from . import RANDOM_STATE'로 참조하므로 모듈 임포트보다 먼저 정의한다. 
-RANDOM_STATE = 3217
+RANDOM_STATE = 42   # 2026-10-30: 3217을 넣었다가 바로 42로 덮어쓰던 중복 정의를 하나로 정리(실제 사용값은 원래도 42)
 
 # -----------
 # 내보낼 모듈 임포트 
 # ----------- 
-RANDOM_STATE = 42
 
 from . import my_prep
 from . import my_stats

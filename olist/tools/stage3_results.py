@@ -7,7 +7,8 @@
   2) H1 (P1 가중 비중이 P9 제외 다른 모든 유형보다 높은가, 점추정), H2 (P6a 가중 비중 >= 10%, 점추정)
   3) H3 (탐색적): freight_sum 상위·하위 3분위의 배송비 언급 비율(비가중 주, weight_all 가중은 참고), 방향만
   4) §7 교차분석: freight_sum 3분위 x 유형(주), n_items·n_sellers 1 vs 2+(부). 분기 열이 있으면 같이 계산
-  5) 민감도 (§8): 2018-08 제외, 2018-07·08 제외 (근사: 층 모집단 건수 N_h를 유지하고 남은 표본으로 재가중)
+  5) 민감도 (§8): 2018-08 제외, 2018-07·08 제외 (정식 재계산: 대상 6,400건에서 해당 월을 빼고 층 모집단 건수를 다시 센 뒤 남은 표본으로 재가중.
+     2026-10-30 수정. 이전 버전은 층 모집단 건수 N_h를 그대로 두는 근사였음, D-35)
   6) P6b를 도착 전 응답 / 도착 후 응답으로 분리
   7) 규칙 precision·recall의 가중(weight_all) 참고값과 비가중 차이 (--freeze-commit/--rules-sha를 주면)
 
@@ -29,6 +30,7 @@ CROSS = Path("data/processed/stage3/stage3_cross_vars_6400__open_after_labeling.
 LAB_DEV = Path("outputs/labels/stage3_labels_dev.csv")
 LAB_HOLD = Path("outputs/labels/stage3_labels_hold.csv")
 TRANS_HOLD = Path("data/interim/stage3/translations_hold.csv")
+TARGET = Path("data/processed/stage3_target_6400.parquet")  # 민감도용 층별 모집단 월 건수(원문 열은 읽지 않음)
 OUT_DIR = Path("outputs/tables")
 TYPES = ["P1", "P2", "P3", "P4", "P5", "P6a", "P6b", "P9"]
 SEED, N_BOOT = 20261029, 2000
@@ -88,11 +90,16 @@ def shares_table(df, w_col, label, n_boot, seed):
     return pd.DataFrame(rows)
 
 
-def reweight(df, drop_mask):
-    """남은 표본으로 재가중: 층 모집단 건수 N_h는 유지, n_h만 남은 건수로. 표본이 0이 된 층은 제외(근사)."""
+def reweight(df, drop_mask, pop_N):
+    """규칙 문서 §8 정식 재계산: 층 모집단 건수를 해당 월을 뺀 값(pop_N)으로 바꾸고, n_h는 남은 표본 건수로.
+    모집단이 0이 된 층은 표본도 0이어야 한다(assert). 모집단이 남았는데 표본이 0인 층이 생기면 중단."""
     keep = df[~drop_mask].copy()
     keep["n_h2"] = keep.groupby("stratum")["review_id"].transform("size")
-    keep["w2"] = keep["N_h"] / keep["n_h2"]
+    keep["N_h2"] = keep["stratum"].map(pop_N).fillna(0)
+    assert (keep["N_h2"] > 0).all(), "남은 표본이 있는데 모집단이 0인 층이 있음"
+    lost = set(pop_N[pop_N > 0].index) - set(keep["stratum"])
+    assert not lost, f"모집단은 남았는데 표본이 0이 된 층: {lost}"
+    keep["w2"] = keep["N_h2"] / keep["n_h2"]
     dropped_strata = set(df["stratum"]) - set(keep["stratum"])
     return keep, dropped_strata
 
@@ -212,11 +219,18 @@ def main():
     print("(위 4개 이외의 교차는 '사후 탐색'이며 다중비교 보정을 하지 않았다)")
 
     # ---------- 5) 민감도
-    print("\n[5] 민감도 (근사: 층 모집단 건수 N_h 유지, 남은 표본으로 재가중. 정식 재계산은 층별 모집단의 8월 건수가 필요)")
+    print("\n[5] 민감도 (§8 정식 재계산: 대상 6,400건에서 해당 월을 빼고 층 모집단 건수를 다시 센 뒤 남은 표본으로 재가중)")
+    pop = pd.read_parquet(TARGET, columns=["review_id", "stratum", "is_aug_2018", "is_jul_aug_2018"])
+    assert len(pop) == 6400 and pop.review_id.is_unique, "대상 파일이 6,400건이 아님"
+    n_all = pop.groupby("stratum").size()
+    assert (n_all.reindex(df.groupby("stratum")["N_h"].first().index) == df.groupby("stratum")["N_h"].first()).all(), \
+        "대상 파일의 층별 건수가 mapping의 N_h와 다름"
     sens = [sh.assign(**{"set": "all310"})]
     for flag, name in (("is_aug_2018", "2018-08 제외"), ("is_jul_aug_2018", "2018-07·08 제외")):
         mask = tob(df[flag])
-        keep, dropped = reweight(df, mask)
+        pop_N = pop[pop[flag].astype(int) == 0].groupby("stratum").size()
+        print(f"{name}: 모집단 {int(pop_N.sum())}건 (제외 {6400 - int(pop_N.sum())}건)")
+        keep, dropped = reweight(df, mask, pop_N)
         s2 = shares_table(keep, "w2", name, a.n_boot, a.seed)
         sens.append(s2)
         p1, p6a = s2.set_index("type").loc["P1", "weighted"], s2.set_index("type").loc["P6a", "weighted"]

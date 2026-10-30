@@ -1,8 +1,8 @@
 """번역 프로브 채점 (3단계 번역 도구 선정용)
 사용법 (olist 폴더에서 실행):
-  1) python docs/score_probes.py init "도구명" "버전"   # 결과 파일에 14행 빈칸 추가
+  1) python tools/score_probes.py init "도구명" "버전"   # 결과 파일에 14행 빈칸 추가
   2) 결과 CSV의 output(번역문)·pass(Y/N) 칸을 채움 (판단 기준: probes.csv의 expected_meaning_ko)
-  3) python docs/score_probes.py score                 # 기준 대비 통과/미달 출력
+  3) python tools/score_probes.py score                 # 기준 대비 통과/미달 출력
 프로브는 가짜 문장이므로 실제 리뷰(hold-out 포함)와 무관하다.
 """
 import sys

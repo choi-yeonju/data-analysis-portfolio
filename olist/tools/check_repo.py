@@ -43,7 +43,7 @@ args.skip_nb = list(args.skip_nb) + _moved
 ROOT = args.root
 SKIP_CHECKS = {s.upper() for s in args.skip}
 on = lambda k: k not in SKIP_CHECKS
-DOCS = ["decisions", "log", "data_dictionary", "agenda", "agenda_onepager"]   # stage3_rules.md는 원본 CSV 기준 수치라 숫자 출처 점검(F)에서 제외
+DOCS = ["decisions", "log", "data_dictionary", "agenda", "agenda_onepager", "final_report"]   # [2026-10-30] final_report 추가   # stage3_rules.md는 원본 CSV 기준 수치라 숫자 출처 점검(F)에서 제외
 ALLOW_F = {"−0.50"}            # F 오탐 허용: 강사님 코멘트 인용 숫자(노트북 출력이 아님). 출처를 직접 확인한 것만, 이유를 적어서 추가
 HIST_OK = re.compile(r"04_eda_day4")   # A2·A3 예외: 이력 설명용 옛 노트북 이름 (추가할 때 이유를 주석으로)
 problems, warns, skipped = [], [], []
@@ -184,6 +184,9 @@ if on("F"):
     src_text = ""
     for p in notebooks: src_text += "\n" + nb_text(p)
     for p in glob.glob(f"{ROOT}/outputs/tables/*.csv"): src_text += "\n" + rd(p)
+    # [2026-10-30 추가] 3단계 숫자는 도구 스크립트의 assert·기대값과 도구 실행 기록에 있으므로 함께 찾는다
+    for p in glob.glob(f"{ROOT}/tools/*.py"): src_text += "\n" + rd(p)
+    for p in glob.glob(f"{ROOT}/docs/*_log.txt") + glob.glob(f"{ROOT}/outputs/logs/*.txt"): src_text += "\n" + rd(p)
     pool = set()
     for _, t in numbers(src_text.replace("−", "-")):
         try: pool.add(float(t.replace(",", "").replace("%", "")))
