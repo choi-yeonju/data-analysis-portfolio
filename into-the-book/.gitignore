@@ -1,0 +1,6 @@
+# into-the-book 전용 (루트 .gitignore 의 .env 규칙은 그대로 적용됨)
+data/raw/
+data/interim/
+*.xlsx
+.ipynb_checkpoints/
+__pycache__/
