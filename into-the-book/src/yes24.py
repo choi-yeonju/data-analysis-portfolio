@@ -86,11 +86,15 @@ def fetch_page(day: str, page: int, category: str = NOVEL, use_cache: bool = Tru
 
 def fetch_day(day: str, max_rank: int = 1000, category: str = NOVEL, **kw) -> pd.DataFrame:
     """그날 1~max_rank위. 열: date, rank, itemId, isbn13, title, author, publisher, publishDate, salePoint."""
-    rows = []
+    rows, short_pages, no_data = [], [], False
     for page in range(1, (max_rank - 1) // PAGE_SIZE + 2):
         items = fetch_page(day, page, category, **kw)
+        if items is None and page == 1:
+            no_data = True
         if not items:
             break
+        if len(items) < PAGE_SIZE:
+            short_pages.append(page)
         for it in items:
             rank = (page - 1) * PAGE_SIZE + int(it["sortOrder"])
             if rank > max_rank:
@@ -103,15 +107,24 @@ def fetch_day(day: str, max_rank: int = 1000, category: str = NOVEL, **kw) -> pd
             })
         # 주의: 중간 페이지도 99개만 올 때가 있음 (2026-11-03 확인). 짧은 페이지에서 멈추지 않는다.
     df = pd.DataFrame(rows)
+    df.attrs["short_pages"] = short_pages  # 100개 미만으로 온 페이지 번호 (1페이지면 Top100에 빈칸)
+    df.attrs["no_data"] = no_data          # 그날 데이터 자체가 없음 (404)
     if not df.empty:
         df = df.drop_duplicates("itemId").sort_values("rank").reset_index(drop=True)
     return df
 
 
-def find_book(day: str, title_prefix: str, max_rank: int = 1000, **kw) -> int | None:
-    """그날 title_prefix 로 시작하는 책의 순위 (없으면 None)."""
+def find_rank(day: str, *, isbn13: str | None = None, item_id: str | None = None,
+              max_rank: int = 1000, **kw) -> int | None:
+    """그날 순위. 1000위 밖이면 0, 그날 데이터 자체가 없으면(404) None.
+    제목이 아니라 ISBN13 또는 itemId로 찾는다 (동명 책 혼입 방지)."""
+    if not (isbn13 or item_id):
+        raise ValueError("isbn13 또는 item_id 중 하나는 필요")
     df = fetch_day(day, max_rank, **kw)
-    if df.empty:
+    if df.attrs.get("no_data"):
         return None
-    hit = df[df["title"].str.startswith(title_prefix, na=False)]
-    return int(hit["rank"].min()) if not hit.empty else None
+    if df.empty:
+        return 0
+    col, val = ("isbn13", isbn13) if isbn13 else ("itemId", item_id)
+    hit = df[df[col].astype(str) == str(val)]
+    return int(hit["rank"].min()) if not hit.empty else 0

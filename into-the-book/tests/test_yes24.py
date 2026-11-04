@@ -42,3 +42,17 @@ def test_short_middle_page_does_not_stop(tmp_path, monkeypatch):
 def test_no_data_day(tmp_path, monkeypatch):
     _cache(tmp_path, monkeypatch, "2023-01-02", {1: None})
     assert yes24.fetch_day("2023-01-02").empty
+
+
+def test_find_rank_distinguishes_no_data_and_out_of_list(tmp_path, monkeypatch):
+    _cache(tmp_path, monkeypatch, "2024-06-03", {1: _items(100, "a"), 2: []})
+    _cache(tmp_path, monkeypatch, "2023-01-02", {1: None})
+    assert yes24.find_rank("2024-06-03", item_id="a7") == 7
+    assert yes24.find_rank("2024-06-03", item_id="zzz") == 0      # 1000위 밖
+    assert yes24.find_rank("2023-01-02", item_id="a7") is None    # 데이터 없는 날
+
+
+def test_short_first_page_is_flagged(tmp_path, monkeypatch):
+    short = [x for x in _items(100, "a") if x["sortOrder"] != 10]
+    _cache(tmp_path, monkeypatch, "2024-06-03", {1: short, 2: []})
+    assert yes24.fetch_day("2024-06-03").attrs["short_pages"] == [1]

@@ -1,6 +1,9 @@
-# into-the-book 전용 (루트 .gitignore 의 .env 규칙은 그대로 적용됨)
-data/raw/
-data/interim/
-*.xlsx
-.ipynb_checkpoints/
+# into-the-book 전용. 루트 .gitignore 에도 .env/.venv 가 있지만 여기서도 직접 막는다.
+.env
+.venv/
+.pytest_cache/
 __pycache__/
+.ipynb_checkpoints/
+# 데이터는 전부 커밋하지 않음 (YES24 약관: 대량 수집·축적 DB 구축 금지, 공개는 집계 결과만)
+data/
+*.xlsx

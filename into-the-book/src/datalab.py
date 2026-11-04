@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from datetime import datetime, timedelta, timezone
@@ -58,9 +59,14 @@ def _count_call() -> None:
 
 
 # ── 요청 ────────────────────────────────────────────────────
-def _cache_path(book_id: str, start: str, end: str, unit: str, tag: str) -> Path:
+def _cache_path(book_id: str, start: str, end: str, unit: str, tag: str,
+                keywords: list[str], ages: list[str] | None, gender: str | None) -> Path:
+    """요청 내용(키워드·연령·성별)의 해시를 파일명에 넣는다.
+    키워드 규칙을 바꾼 뒤 같은 book_id로 부르면 옛 응답이 나오던 문제 방지 (2026-11-04)."""
+    sig = json.dumps({"k": keywords, "a": ages, "g": gender}, ensure_ascii=False, sort_keys=True)
+    h = hashlib.sha1(sig.encode("utf-8")).hexdigest()[:8]
     suffix = f"_{tag}" if tag else ""
-    return CACHE_DIR / f"{book_id}_{start}_{end}_{unit}{suffix}.json"
+    return CACHE_DIR / f"{book_id}_{start}_{end}_{unit}{suffix}_{h}.json"
 
 
 def fetch(
@@ -80,7 +86,7 @@ def fetch(
     tag: 같은 책을 다른 목적으로 받을 때 구분용 (예: 'cut' = 진입 직전 주까지 자른 요청).
     ages: 데이터랩 코드. '3' = 19~24세, '4' = 25~29세.
     """
-    path = _cache_path(book_id, start, end, time_unit, tag)
+    path = _cache_path(book_id, start, end, time_unit, tag, keywords, ages, gender)
     if use_cache and path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
 

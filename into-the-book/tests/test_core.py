@@ -94,3 +94,10 @@ def test_event_study_too_few_books():
     t = event_study.build_table([{"book_id": 1, "group": "out200", "weekly": w,
                                   "entry_week": w.index[-1] + pd.Timedelta(weeks=1)}])
     assert event_study.go_check(t, Y=1.2)["verdict"] == "판정 불가"
+
+
+def test_cache_path_changes_with_keywords():
+    a = datalab._cache_path("b1", "2024-01-01", "2024-02-01", "date", "", ["제목"], None, None)
+    b = datalab._cache_path("b1", "2024-01-01", "2024-02-01", "date", "", ["제목", "제목 저자"], None, None)
+    c = datalab._cache_path("b1", "2024-01-01", "2024-02-01", "date", "", ["제목"], ["3"], None)
+    assert len({a, b, c}) == 3
