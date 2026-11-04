@@ -11,7 +11,7 @@ into-the-book/
 ├── src/
 │   ├── config.py        # .env 에서 API 키 읽기
 │   ├── datalab.py       # 데이터랩 수집: 책 1권 = 요청 1회, 결측일 0, 일간 → 주간(월~일)
-│   ├── yes24.py         # YES24 일별 소설 순위 (2023-05-20~, 하루 약 1000위)
+│   ├── yes24.py         # YES24 일별 소설 순위 (2023-05-20~, 1~200위. 약관 문의 답 전에는 캐시만 읽음)
 │   ├── spikes.py        # 급증 판정: 직전 8주 z > 2 그리고 직전 6주 대비 배율 ≥ 2
 │   └── event_study.py   # 진입 주 이벤트 스터디: 합산 비율 + 책 단위 부트스트랩
 ├── scripts/             # 파일럿 점검용 (결과는 PILOT_LOG.md)
@@ -24,6 +24,7 @@ into-the-book/
 ├── tests/
 ├── PREREGISTRATION.md   # 데이터 보기 전에 정한 기준
 ├── PILOT_LOG.md         # 파일럿 발견 기록 (날짜순)
+├── results/             # 공개용 집계 결과 (data/ 는 커밋 안 함)
 └── .env.example
 ```
 
@@ -33,7 +34,7 @@ into-the-book/
 pip install -r requirements.txt
 cp .env.example .env          # 값 채우기 (.env 는 커밋되지 않음)
 python -m pytest -q
-python -m scripts.smoke_datalab
+python -m scripts.smoke_datalab   # ⚠️ 키워드 규칙 확정 전에는 빈 응답
 ```
 
 받은 응답은 `data/raw/datalab/` 에 캐시되고(커밋 안 됨), 하루 호출 수는 `data/raw/_datalab_calls.json` 에 기록되어 1,000회를 넘기기 전에 멈춘다.

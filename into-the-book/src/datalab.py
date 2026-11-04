@@ -34,7 +34,10 @@ def title_rule(title: str) -> str:
 
 
 def build_keywords(title: str, author: str, dict_word: bool = False) -> list[str]:
-    """dict_word=True: 사전 단어 제목(예: 수족관)은 '제목 저자' 하나만 (3-3 수정안, 파일럿에서 비교)."""
+    """⚠️ 2026-11-04 현재 규칙 미확정. 이 4개 조합(합산)과 '제목 저자' 단독은 책 1권에서 빈 응답이었음
+    (PILOT_LOG 키워드 비교). 20권 검토 후 '제목 단독 포함'으로 고칠 예정. 그 전에는 이 함수로 수집하지 말 것.
+
+    dict_word=True: 사전 단어 제목(예: 수족관)은 '제목 저자' 하나만 (3-3 수정안, 위 이유로 빈 응답 위험)."""
     if dict_word:
         return [f"{title} {author}"]
     return [f"{title} {author}", f"{author} {title}", f"{title} 책", f"{title} 소설"]

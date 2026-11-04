@@ -35,7 +35,7 @@ def test_short_middle_page_does_not_stop(tmp_path, monkeypatch):
     short = [x for x in _items(100, "b") if x["sortOrder"] != 50]  # 99개
     _cache(tmp_path, monkeypatch, "2024-07-22",
            {1: _items(100, "a"), 2: short, 3: _items(100, "c"), 4: []})
-    df = yes24.fetch_day("2024-07-22")
+    df = yes24.fetch_day("2024-07-22", max_rank=1000)
     assert len(df) == 299
     assert df.loc[df["title"] == "c1", "rank"].item() == 201
 
@@ -49,8 +49,9 @@ def test_find_rank_distinguishes_no_data_and_out_of_list(tmp_path, monkeypatch):
     _cache(tmp_path, monkeypatch, "2024-06-03", {1: _items(100, "a"), 2: []})
     _cache(tmp_path, monkeypatch, "2023-01-02", {1: None})
     assert yes24.find_rank("2024-06-03", item_id="a7") == 7
-    out = yes24.find_rank("2024-06-03", item_id="zzz")             # 1000위 밖
-    assert out == yes24.OUT_OF_LIST and not (out <= 100)
+    out = yes24.find_rank("2024-06-03", item_id="zzz")             # 200위 밖
+    assert out == yes24.DEPTH + 1 and not (out <= 100)
+    assert yes24.find_rank("2024-06-03", item_id="zzz", max_rank=1000) == 1001
     assert yes24.find_rank("2023-01-02", item_id="a7") is None    # 데이터 없는 날
 
 
@@ -58,3 +59,21 @@ def test_short_first_page_is_flagged(tmp_path, monkeypatch):
     short = [x for x in _items(100, "a") if x["sortOrder"] != 10]
     _cache(tmp_path, monkeypatch, "2024-06-03", {1: short, 2: []})
     assert yes24.fetch_day("2024-06-03").attrs["short_pages"] == [1]
+
+
+def test_empty_first_page_is_none(tmp_path, monkeypatch):
+    _cache(tmp_path, monkeypatch, "2024-06-03", {1: []})
+    assert yes24.find_rank("2024-06-03", item_id="a1") is None
+
+
+def test_default_depth_is_200_and_reads_only_two_pages(tmp_path, monkeypatch):
+    _cache(tmp_path, monkeypatch, "2024-06-03", {1: _items(100, "a"), 2: _items(100, "b")})
+    df = yes24.fetch_day("2024-06-03")          # 3페이지 캐시가 없어도 호출 안 함
+    assert df["rank"].max() == 200
+
+
+def test_api_blocked_without_permission_flag(monkeypatch):
+    monkeypatch.delenv(yes24.ALLOW_ENV, raising=False)
+    import pytest
+    with pytest.raises(yes24.YES24Error):
+        yes24._get({"categoryId": yes24.NOVEL})

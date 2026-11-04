@@ -8,6 +8,10 @@
 """
 from datetime import date, timedelta
 
+import os
+if os.getenv("YES24_ALLOW_FETCH") != "1":
+    raise SystemExit("재실행 금지: YES24 약관 문의 답 오기 전 (11-03 점검용, 결과는 PILOT_LOG)")
+
 import requests
 
 from src.config import get_key

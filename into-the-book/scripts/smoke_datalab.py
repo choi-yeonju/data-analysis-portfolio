@@ -1,4 +1,6 @@
-"""키가 잘 붙었는지 + 0단계 확인용. 호출 2회 (일간 1, 주간 1).
+"""⚠️ build_keywords 는 아직 옛 규칙(빈 응답). 다시 돌리면 데이터랩 호출만 쓴다. 결과는 PILOT_LOG 참고.
+
+키가 잘 붙었는지 + 0단계 확인용. 호출 2회 (일간 1, 주간 1).
 
 실행 (into-the-book 폴더에서):  python -m scripts.smoke_datalab
 """

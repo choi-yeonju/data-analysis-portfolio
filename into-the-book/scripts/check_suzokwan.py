@@ -11,6 +11,6 @@ ITEM_ID = "124235834"
 days = pd.date_range("2024-01-08", "2024-09-30", freq="W-MON")
 print("날짜         순위 (1001 = 1000위 밖, None = 그날 데이터 없음). 캐시만 읽음")
 for d in days:
-    r = yes24.find_rank(d.strftime("%Y-%m-%d"), item_id=ITEM_ID)
-    bar = "" if r is None or r == yes24.OUT_OF_LIST else "#" * max(1, (1001 - r) // 25)
+    r = yes24.find_rank(d.strftime("%Y-%m-%d"), item_id=ITEM_ID, max_rank=1000)  # 11-03에 받은 1000위 캐시 확인용
+    bar = "" if r is None or r == 1001 else "#" * max(1, (1001 - r) // 25)
     print(f"{d:%Y-%m-%d}  {str(r):>5}  {bar}")

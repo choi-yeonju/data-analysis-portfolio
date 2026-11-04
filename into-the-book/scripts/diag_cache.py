@@ -19,6 +19,7 @@ print(f"캐시 파일 {len(files)}개")
 short, pages = Counter(), Counter()
 short_detail = []
 sale = defaultdict(set)
+days_seen = defaultdict(set)
 for f in files:
     d = json.loads(f.read_text(encoding="utf-8"))
     if d["status"] != 200:
@@ -33,6 +34,7 @@ for f in files:
         short_detail.append((day, page, len(items), orders[-1], missing))
     for it in items:
         sale[str(it.get("itemId"))].add(it.get("salePoint"))
+        days_seen[str(it.get("itemId"))].add(day)
 
 print("\n[1] 페이지 번호별: 받은 날 수 / 100개 미만인 날 수")
 for p in sorted(pages):
@@ -46,7 +48,8 @@ for day, page, n, mx, missing in short_detail:
            "1~99로 다시 매김 → 그 뒤 순위 1씩 밀림" if mx == n else "기타")
     print(f"    {day} {page}페이지: {n}개, 최대 sortOrder {mx}, 빠진 번호 {missing} → {kind}")
 
-multi = [k for k, v in sale.items() if len(v) > 1]
-seen_twice = sum(1 for k in sale if k)  # 책 수
-print(f"\n[3] salePoint: 캐시에 있는 책 {seen_twice}권 중 날짜마다 값이 달라진 책 {len(multi)}권")
+# 하루만 나온 책은 값이 변할 수 없으니 비교 대상에서 뺀다 (2026-11-04 리뷰 지적)
+repeat = [k for k, ds in days_seen.items() if len(ds) >= 2]
+changed = [k for k in repeat if len(sale[k]) > 1]
+print(f"\n[3] salePoint: 캐시의 책 {len(days_seen)}권 중 2일 이상 나온 책 {len(repeat)}권, 그중 값이 달라진 책 {len(changed)}권")
 print("    0권이면 → 과거 날짜를 조회해도 같은 값(현재 값). 결과 변수로 못 씀")
