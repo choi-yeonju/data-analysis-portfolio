@@ -30,7 +30,8 @@ def test_max_rank_cut(tmp_path, monkeypatch):
 
 
 def test_short_middle_page_does_not_stop(tmp_path, monkeypatch):
-    """중간 페이지가 99개여도 다음 페이지를 계속 받는다 (버그 재발 방지)."""
+    """중간 페이지가 99개여도 다음 페이지를 계속 받는다 (버그 재발 방지).
+    참고: 실제 API는 빈 번호를 남기지 않고 1~99로 다시 매긴다(2026-11-04 확인). 여기서는 멈추지 않는지만 본다."""
     short = [x for x in _items(100, "b") if x["sortOrder"] != 50]  # 99개
     _cache(tmp_path, monkeypatch, "2024-07-22",
            {1: _items(100, "a"), 2: short, 3: _items(100, "c"), 4: []})
@@ -48,7 +49,8 @@ def test_find_rank_distinguishes_no_data_and_out_of_list(tmp_path, monkeypatch):
     _cache(tmp_path, monkeypatch, "2024-06-03", {1: _items(100, "a"), 2: []})
     _cache(tmp_path, monkeypatch, "2023-01-02", {1: None})
     assert yes24.find_rank("2024-06-03", item_id="a7") == 7
-    assert yes24.find_rank("2024-06-03", item_id="zzz") == 0      # 1000위 밖
+    out = yes24.find_rank("2024-06-03", item_id="zzz")             # 1000위 밖
+    assert out == yes24.OUT_OF_LIST and not (out <= 100)
     assert yes24.find_rank("2023-01-02", item_id="a7") is None    # 데이터 없는 날
 
 

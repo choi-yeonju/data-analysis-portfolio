@@ -24,6 +24,7 @@ URL = "https://apis.yes24.com/v1/category/bestsellerDaily"
 NOVEL = "001001046"
 DATA_START = "2023-05-20"
 PAGE_SIZE = 100
+OUT_OF_LIST = 1001  # 1000위 밖. 0을 쓰면 rank <= 100 비교에서 진입으로 잡혀서 위험 (2026-11-04)
 MIN_INTERVAL = 0.15  # 초당 10회 제한보다 여유 있게
 CACHE_DIR = RAW_DIR / "yes24"
 
@@ -116,7 +117,8 @@ def fetch_day(day: str, max_rank: int = 1000, category: str = NOVEL, **kw) -> pd
 
 def find_rank(day: str, *, isbn13: str | None = None, item_id: str | None = None,
               max_rank: int = 1000, **kw) -> int | None:
-    """그날 순위. 1000위 밖이면 0, 그날 데이터 자체가 없으면(404) None.
+    """그날 순위. 1000위 밖이면 OUT_OF_LIST(1001), 그날 데이터 자체가 없으면(404) None.
+    None은 숫자 비교에서 바로 에러가 나서 '데이터 없음'이 조용히 섞이지 않는다.
     제목이 아니라 ISBN13 또는 itemId로 찾는다 (동명 책 혼입 방지)."""
     if not (isbn13 or item_id):
         raise ValueError("isbn13 또는 item_id 중 하나는 필요")
@@ -124,7 +126,7 @@ def find_rank(day: str, *, isbn13: str | None = None, item_id: str | None = None
     if df.attrs.get("no_data"):
         return None
     if df.empty:
-        return 0
+        return OUT_OF_LIST
     col, val = ("isbn13", isbn13) if isbn13 else ("itemId", item_id)
     hit = df[df[col].astype(str) == str(val)]
-    return int(hit["rank"].min()) if not hit.empty else 0
+    return int(hit["rank"].min()) if not hit.empty else OUT_OF_LIST
