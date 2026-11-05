@@ -305,3 +305,11 @@
 - `tools/report_stage3.py` 맨 위 설명에 역할만 추가(교차검증용 두 번째 구현, 공식 집계는 `stage3_results.py`, 인용하는 것은 H1 보조 지표·비가중 교차 건수표뿐, §8 민감도 출력은 인용하지 않음). 계산 변경 없음. `label_hold.py`의 쓰지 않은 재라벨 분기(보관 파일명이 `stage3_relabel_dev`로 남아 있음)는 실행에 쓰인 코드라 고치지 않고 이 기록으로 남긴다.
 - 강사님 전달용 정리(같은 날): 원페이저·안건·보고서 첫머리에 서로와 3단계 결과·decisions·계획서로 가는 링크를 걸었다(GitHub에서 바로 열림). 선택 작업 미실시 이유를 "일정상"으로 확인해 D-36과 세 문서에 반영했다.
 - 커밋 대상: `tools/stage3_results.py`, `outputs/tables/stage3_results_sensitivity.csv`, `docs/stage3_results.md`, `docs/decisions.md`, `docs/log.md`, `docs/README_snippet.md`, `docs/agenda.md`, `docs/agenda_onepager.md`, `docs/data_dictionary.md`, `docs/final_report.md`, `docs/data_analysis_plan_2nd_rev12.md`, `README.md`, `notebooks/README.md`, `tools/check_repo.py`, `notebooks/01_load_check.ipynb` \~ `notebooks/08_wrapup.ipynb`(8개), `notebooks/09_stage3_step1_target.ipynb`, `notebooks/10_stage3_step2_sample.ipynb`, `notebooks/11_stage3_results.ipynb`, `outputs/figures/11_*.png`, `src/__init__.py`, `tools/kw_rules_draft.py`, `tools/score_probes.py`, `tools/translate_probes_google.py`. 01\~08은 Restart & Run All 후 커밋(이때 `data/processed/` 파일과 `outputs/` 08 결과표·그림이 다시 쓰이지만 내용은 같음). 커밋: `b65fd66`(2026-10-30, push 완료). archive 추적 해제 `.gitignore`는 `e1b3319`
+
+## Day 12 — 기업 관점 결론 추가, 다물품 사후 탐색 (2026-11-05)
+- 강사님 피드백(결론이 연구 위주라 기업 입장의 이유·적용 인사이트가 필요)을 받아 여러 AI의 결론 구상을 비교했다. 다른 AI 답변의 숫자가 서로 다르게 보인 것은 대부분 기간·집단 조건(상파울루 내, 8/1\~7 vs 8/1\~14, 평균 vs 중앙값)이 빠진 채 옮겨진 탓이었고, 보고서 4-2의 값(07 6-11)이 기준임을 확인했다. 원본 CSV로 96,204 / 12,228 / 3,981 / 8,247을 다시 계산해 일치를 확인했다.
+- 08 7절 추가(D-37): 다물품·다셀러 주문의 비지연 저평점률. 기존 셀은 건드리지 않았다. **실행 필요:** 7절 셀만 실행해 결과 표 2개를 만든다(앞 절은 다시 돌리지 않아도 됨).
+- `final_report.md`: 1절 "무엇을 결정할 수 있나"(질문·결론·제안 표·만들지 않을 것·믿기 전에) 신설, 6-4 추가, 방법 등은 부록 A\~F로 이동하고 절 번호 참조를 고쳤다. 한계 11·검토 요청 10을 더했다.
+- `README.md`: 제목을 기업 질문으로, 요약에 질문·결론 줄, 핵심 결과에 전체 데이터 확인 행, "시사점(가설)"을 제안 표로 바꿨다. 3단계 결과 표 두 세트(공식 `stage3_results_*`, 교차검증 `stage3_final_*`)를 안내했다.
+- 정리 방침: `agenda.md`·`agenda_onepager.md`는 보고 후 archive로 옮긴다. `README_snippet.md`는 유지(3단계 실행 순서).
+
