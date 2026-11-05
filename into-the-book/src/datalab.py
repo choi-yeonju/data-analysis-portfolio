@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import warnings
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -38,6 +39,7 @@ def build_keywords(title: str, author: str, dict_word: bool = False) -> list[str
     (PILOT_LOG 키워드 비교). 20권 검토 후 '제목 단독 포함'으로 고칠 예정. 그 전에는 이 함수로 수집하지 말 것.
 
     dict_word=True: 사전 단어 제목(예: 수족관)은 '제목 저자' 하나만 (3-3 수정안, 위 이유로 빈 응답 위험)."""
+    warnings.warn("키워드 규칙 미확정: 이 구성은 책 1권에서 빈 응답 (PILOT_LOG 키워드 비교)", stacklevel=2)
     if dict_word:
         return [f"{title} {author}"]
     return [f"{title} {author}", f"{author} {title}", f"{title} 책", f"{title} 소설"]
